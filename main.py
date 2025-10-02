@@ -23,13 +23,13 @@ DEFAULT_SCHEDULED_CONFIG = {
 }
 
 
-# ------------------------------ 插件注册（文档位置参数格式） ------------------------------
+# ------------------------------ 插件注册（严格遵循文档位置参数格式） ------------------------------
 @register(
-    "astrbot_plugin_announcement_push",  # 1.插件名（以"astrbot_plugin_"开头，符合命名规则🔶1-16、🔶1-17）
+    "astrbot_plugin_announcement_push",  # 1.插件名（以"astrbot_plugin_"开头🔶1-16、🔶1-17）
     "chenmuting",  # 2.作者（必填）
-    "AstrBot 管理员专属公告推送插件（支持中英文指令、公告换行、WebUI配置）",  # 3.描述（补充换行功能）
-    "1.2.1",  # 4.版本（必填）
-    "https://github.com/chenmuting/announcement_push"  # 5.仓库地址（可选，符合文档规则🔶1-51）
+    "AstrBot 管理员专属公告推送插件（支持中英文指令、公告换行、WebUI配置）",  # 3.描述（必填）
+    "1.2.0",  # 4.版本（必填）
+    "https://github.com/chenmuting/announcement_push"  # 5.仓库地址（可选🔶1-51）
 )
 class AnnouncementPushPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -44,7 +44,7 @@ class AnnouncementPushPlugin(Star):
         # 2. 加载WebUI可视化配置（无配置时用默认值🔶1-369）
         self._load_webui_config()
 
-        # 3. 加载持久化数据（群列表、定时任务，符合文档数据存储规则🔶1-109）
+        # 3. 加载持久化数据（群列表、定时任务🔶1-109）
         self.group_config = self._load_group_config()
         self.scheduled_config = self._load_scheduled_config()
 
@@ -57,7 +57,7 @@ class AnnouncementPushPlugin(Star):
         """加载WebUI配置（_conf_schema.json定义的参数🔶1-360）"""
         self.default_announcement = self.astr_config.get(
             "default_announcement",
-            "管理员未设置默认公告\n可通过「/推送公告 内容」指令自定义，支持\\n换行"  # 示例换行提示
+            "管理员未设置默认公告\n支持\\n换行，例：第一行\\n第二行"
         )
         self.allow_at_all = self.astr_config.get("allow_at_all", True)  # 仅AIOCQHTTP支持@全体🔶1-98
         self.default_scheduled_time = self.astr_config.get("default_scheduled_time", "09:00")
@@ -118,7 +118,7 @@ class AnnouncementPushPlugin(Star):
             # 遍历所有定时任务（切片防遍历中修改列表）
             for task in self.scheduled_config["scheduled_tasks"][:]:
                 if task["time"] == current_time:
-                    # 执行推送（传递含换行的内容）
+                    # 执行推送（传递含\n的原始内容）
                     push_result = await self._send_announcement_to_groups(task["content"])
                     logger.info(f"定时公告（ID：{task['task_id']}）执行完成：{push_result}")
 
@@ -133,7 +133,7 @@ class AnnouncementPushPlugin(Star):
             await asyncio.sleep(60)
 
     async def _send_announcement_to_groups(self, content: str) -> str:
-        """向所有已开启群推送公告（核心：保留content中的\n实现换行，符合Comp.Plain规则🔶1-86、🔶1-259）"""
+        """向所有已开启群推送公告（核心修复：保留\n，让Comp.Plain解析为换行🔶1-86、🔶1-259）"""
         if not self.group_config["enabled_groups"]:
             return "无已开启推送的群"
 
@@ -144,11 +144,11 @@ class AnnouncementPushPlugin(Star):
 
         for group in self.group_config["enabled_groups"]:
             try:
-                # 1. 构建MessageChain（Comp.Plain支持\n换行，直接传递content🔶1-259）
+                # 1. 构建MessageChain（Comp.Plain直接接收含\n的content，不做转义）
                 message_chain = MessageChain()
                 if self.allow_at_all:
                     message_chain.chain.append(Comp.At(qq="all"))  # @全体成员（仅AIOCQHTTP支持🔶1-98）
-                # 2. 关键：保留content中的\n，Comp.Plain会自动解析为换行
+                # 2. 关键：保留content中的\n，Comp.Plain会自动解析为实际换行
                 message_chain.chain.append(
                     Comp.Plain(f"【管理员公告】\n{content}\n\n推送时间：{push_time}")
                 )
@@ -178,7 +178,7 @@ class AnnouncementPushPlugin(Star):
         help_text = f"""
 【管理员公告推送插件 - 指令手册】
 📌 所有指令仅管理员可用，支持中英文触发；「推送公告」「定时推送公告」仅支持私聊
-📌 公告内容支持换行：输入\\n（反斜杠+ n）即可，例：/推送公告 第一行\\n第二行
+📌 公告换行说明：输入\\n（反斜杠+字母n）即可换行，例：/推送公告 好的电话电话\\n干得好的话
 
 1. /pushhelp /推送帮助 - 查看插件所有指令（当前指令）
 2. /pushstart /推送开启 - 添加当前群到推送列表（仅群聊）
@@ -188,7 +188,7 @@ class AnnouncementPushPlugin(Star):
 6. /schedulepush /定时推送公告 [时间] [内容] - 设置定时公告（例：/定时推送公告 12:00 第一行\\n第二行）
 
 【当前WebUI配置摘要】
-• 默认公告：{self.default_announcement.replace('\\n', '↩️')[:30]}...（↩️表示换行）
+• 默认公告（↩️表示换行）：{self.default_announcement.replace('\\n', '↩️')[:30]}...
 • @全体成员：{"✅ 允许" if self.allow_at_all else "❌ 禁止"}
 • 默认定时时间：{self.default_scheduled_time}
         """.strip()
@@ -279,8 +279,8 @@ class AnnouncementPushPlugin(Star):
         config_text = f"""
 【管理员公告推送插件 - 完整配置】
 一、WebUI可视化配置（可在插件管理页修改）
-1. 默认公告内容（↩️表示换行）：
-{self.default_announcement.replace('\\n', '\n  ')}  # 展示实际换行效果
+1. 默认公告内容（实际换行效果）：
+{self.default_announcement.replace('\\n', '\n  ')}  # 展示\n解析后的换行
 2. @全体成员开关：{"✅ 允许" if self.allow_at_all else "❌ 禁止"}
 3. 默认定时时间：{self.default_scheduled_time}
 
@@ -294,7 +294,7 @@ class AnnouncementPushPlugin(Star):
 {task_text}
 上次定时推送时间：{self.scheduled_config.get("last_scheduled_push_time", "未推送过")}
 
-📌 提示：公告内容支持\\n换行，例：输入“第一行\\n第二行”会显示为两行
+📌 提示：公告内容输入\\n即可换行，例：“第一行\\n第二行”推送后显示为两行
         """.strip()
         yield event.plain_result(config_text)
 
@@ -308,21 +308,21 @@ class AnnouncementPushPlugin(Star):
     @filter.event_message_type(filter.EventMessageType.PRIVATE_MESSAGE)  # 仅私聊触发🔶1-178
     async def cmd_push_announce(self, event: AstrMessageEvent, content: str):
         """推送公告：支持\n换行（带参指令，符合文档参数规则🔶1-136、🔶1-137）"""
-        # 仅去除首尾空白，保留中间的\n（关键：不删除换行符）
+        # 仅去除首尾空白，保留中间的\n（关键：不破坏换行符）
         content_stripped = content.strip()
         if not content_stripped:
             yield event.plain_result(
                 "公告内容不能为空！支持换行，例：/推送公告 好的电话电话\\n干得好的话")
             return
 
-        # 执行推送（传递含换行的内容）
+        # 执行推送（传递含\n的原始内容）
         push_result = await self._send_announcement_to_groups(content_stripped)
         self.group_config["last_manual_push_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._save_group_config(self.group_config)
 
-        # 回复中展示换行效果（替换\n为实际换行）
+        # 回复中展示换行预览（让用户确认效果）
         yield event.plain_result(
-            f"即时公告发布完成！\n\n公告内容（实际展示效果）：\n{content_stripped.replace('\\n', '\n')}\n\n推送结果：\n{push_result}\n📌 提示：输入\\n即可实现换行"
+            f"即时公告发布完成！\n\n公告内容（推送后实际效果）：\n{content_stripped.replace('\\n', '\n')}\n\n推送结果：\n{push_result}\n📌 提示：输入\\n即可实现换行"
         )
 
     @filter.command(
@@ -341,28 +341,28 @@ class AnnouncementPushPlugin(Star):
                 raise ValueError("时间需在0-23时、0-59分范围内")
         except Exception as e:
             yield event.plain_result(
-                f"时间格式错误！需为HH:MM（支持换行示例：/定时推送公告 12:00 第一行\\n第二行）\n错误原因：{str(e)}")
+                f"时间格式错误！需为HH:MM（换行示例：/定时推送公告 12:00 第一行\\n第二行）\n错误原因：{str(e)}")
             return
 
-        # 2. 验证内容（保留换行）
+        # 2. 验证内容（保留\n）
         content_stripped = content.strip()
         if not content_stripped:
             yield event.plain_result(
                 "公告内容不能为空！支持换行，例：/定时推送公告 12:00 好的电话电话\\n干得好的话")
             return
 
-        # 3. 创建并保存定时任务（存储含换行的内容）
+        # 3. 创建并保存定时任务（存储含\n的原始内容）
         task_id = f"task_{datetime.now().timestamp():.0f}"
         new_task = {
             "task_id": task_id,
             "time": push_time,
-            "content": content_stripped,  # 保留\n
+            "content": content_stripped,  # 保留\n，不做转义
             "create_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         self.scheduled_config["scheduled_tasks"].append(new_task)
         self._save_scheduled_config(self.scheduled_config)
 
-        # 回复中展示换行预览
+        # 回复中标注换行位置
         yield event.plain_result(
-            f"定时公告设置成功！\n\n任务信息：\n- 任务ID：{task_id}\n- 执行时间：{push_time}\n- 公告内容（预览，↩️为换行）：{content_stripped.replace('\\n', '↩️')}\n\n提示1：任务将在指定时间一次性执行，内容会按\\n自动换行\n提示2：例：输入“第一行\\n第二行”，推送后会显示为两行"
+            f"定时公告设置成功！\n\n任务信息：\n- 任务ID：{task_id}\n- 执行时间：{push_time}\n- 公告内容（↩️为换行）：{content_stripped.replace('\\n', '↩️')}\n\n提示1：任务执行时，\\n会自动解析为换行\n提示2：例：“第一行\\n第二行”将显示为两行文本"
         )
