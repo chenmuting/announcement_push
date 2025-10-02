@@ -1,0 +1,30 @@
+{
+  "default_announcement": {
+    "description": "默认公告内容（未指定内容时使用）",
+    "type": "string",
+    "hint": "管理员使用「/pushannounce」或「/推送公告」未传内容时，将推送此默认文本",
+    "default": "管理员未设置默认公告",
+    "obvious_hint": true
+  },
+  "allow_at_all": {
+    "description": "是否允许推送时@全体成员",
+    "type": "bool",
+    "hint": "仅QQ个人号(aiocqhttp)支持，其他平台可能限制；指令支持「/pushstart」「/推送开启」等中英文触发",
+    "default": true
+  },
+  "default_scheduled_time": {
+    "description": "默认定时公告时间",
+    "type": "string",
+    "hint": "格式：HH:MM（例：09:00），用于快速设置定时任务；定时指令支持「/schedulepush」「/定时推送公告」",
+    "default": "09:00",
+    "options": ["08:00", "09:00", "12:00", "18:00", "20:00"]
+  },
+  "scheduled_task_max": {
+    "description": "最大定时任务数量",
+    "type": "int",
+    "hint": "限制同时存在的定时任务数，防止过多占用资源",
+    "default": 10,
+    "min": 1,
+    "max": 50
+  }
+}
