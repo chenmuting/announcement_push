@@ -29,7 +29,8 @@ DEFAULT_SCHEDULED_CONFIG = {
     "astrbot_plugin_announcement_push",  # 修正：按文档要求以"astrbot_plugin_"开头🔶1-16、🔶1-17
     "chenmuting",  # 2.作者（必填）
     "AstrBot 管理员专属公告推送插件（支持中英文指令、私聊发布/定时公告、WebUI配置）",  # 3.描述（补充中英文指令说明）
-    "1.2.0"  # 4.版本（必填）
+    "1.2.0",  # 4.版本（必填）
+    "https://github.com/chenmuting/announcement_push"
 )  # 文档规则：@register装饰器必须按位置传参，元数据优先级低于metadata.yaml🔶1-60、🔶1-61
 class AnnouncementPushPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):

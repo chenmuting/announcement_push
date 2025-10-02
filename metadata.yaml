@@ -2,7 +2,7 @@ name: astrbot_plugin_announcement_push
 author: chenmuting
 description: AstrBot 管理员专属公告推送插件（支持中英文指令、WebUI配置、即时/定时公告、群推送管理，仅管理员可用）
 version: 1.2.0
-repo_url: https://github.com/你的仓库地址
+repo_url: https://github.com/chenmuting/announcement_push
 tags: ["管理员工具", "公告推送", "定时任务", "WebUI配置", "中英文指令"]
 support_platforms: ["QQ个人号(aiocqhttp)"]  # 仅AIOCQHTTP支持@全体成员🔶1-98
 config_support: true
