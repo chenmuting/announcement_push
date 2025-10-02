@@ -1,4 +1,3 @@
-# 符合文档要求的导入语句（仅导入文档指定的模块/类）🔶1-51、🔶1-60、🔶1-64、🔶1-191、🔶1-250
 from astrbot.api.event import filter, AstrMessageEvent, MessageChain
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger, AstrBotConfig
@@ -8,7 +7,7 @@ import os
 import asyncio
 from datetime import datetime, time, timedelta
 
-# 数据存储路径（遵循文档“持久化数据存data目录”规则🔶1-109）
+# 数据存储路径
 PLUGIN_DATA_DIR = os.path.join("data", "plugin_data", "astrbot_plugin_announcement_push")
 GROUP_CONFIG_PATH = os.path.join(PLUGIN_DATA_DIR, "group_config.json")
 SCHEDULED_CONFIG_PATH = os.path.join(PLUGIN_DATA_DIR, "scheduled_config.json")
@@ -24,47 +23,47 @@ DEFAULT_SCHEDULED_CONFIG = {
 }
 
 
-# ------------------------------ 插件注册（文档位置参数格式） ------------------------------
+# ------------------------------ 插件注册 ------------------------------
 @register(
-    "astrbot_plugin_announcement_push",  # 修正：按文档要求以"astrbot_plugin_"开头🔶1-16、🔶1-17
+    "astrbot_plugin_announcement_push",
     "chenmuting",  # 2.作者（必填）
-    "AstrBot 管理员专属公告推送插件（支持中英文指令、私聊发布/定时公告、WebUI配置）",  # 3.描述（补充中英文指令说明）
+    "AstrBot 管理员专属公告推送插件（支持中英文指令、私聊发布/定时公告、WebUI配置）",
     "1.2.0",  # 4.版本（必填）
     "https://github.com/chenmuting/announcement_push"
-)  # 文档规则：@register装饰器必须按位置传参，元数据优先级低于metadata.yaml🔶1-60、🔶1-61
+)
 class AnnouncementPushPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.context = context
         self.astr_config = config  # 读取WebUI配置（_conf_schema.json定义）
 
-        # 1. 确保数据目录存在（文档要求：持久化数据需手动创建目录🔶1-109）
+        # 1. 确保数据目录存在
         if not os.path.exists(PLUGIN_DATA_DIR):
             os.makedirs(PLUGIN_DATA_DIR)
 
-        # 2. 加载WebUI可视化配置（无配置时用默认值，符合文档版本管理🔶1-369）
+        # 2. 加载WebUI可视化配置
         self._load_webui_config()
 
         # 3. 加载持久化数据（群列表、定时任务）
         self.group_config = self._load_group_config()
         self.scheduled_config = self._load_scheduled_config()
 
-        # 4. 启动定时任务监听（文档异步任务创建方式🔶1-736、🔶1-738）
+        # 4. 启动定时任务监听
         asyncio.create_task(self._scheduled_task_listener())
         logger.info("公告推送插件初始化完成（仅管理员可用，支持中英文指令）")
 
     # ------------------------------ 基础工具方法（配置/数据加载） ------------------------------
     def _load_webui_config(self):
-        """加载WebUI配置（_conf_schema.json定义的参数）🔶1-360"""
+        """加载WebUI配置（_conf_schema.json定义的参数）"""
         self.default_announcement = self.astr_config.get(
             "default_announcement",
             "管理员未设置默认公告"
         )
-        self.allow_at_all = self.astr_config.get("allow_at_all", True)  # 仅AIOCQHTTP支持@全体🔶1-98
+        self.allow_at_all = self.astr_config.get("allow_at_all", True)  # 仅AIOCQHTTP支持@全体
         self.default_scheduled_time = self.astr_config.get("default_scheduled_time", "09:00")
 
     def _load_group_config(self) -> dict:
-        """加载已推送群列表（持久化数据🔶1-109）"""
+        """加载已推送群列表（持久化数据）"""
         if os.path.exists(GROUP_CONFIG_PATH):
             try:
                 with open(GROUP_CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -87,7 +86,7 @@ class AnnouncementPushPlugin(Star):
             logger.error(f"保存群配置失败：{str(e)}")
 
     def _load_scheduled_config(self) -> dict:
-        """加载定时公告任务配置（持久化数据🔶1-109）"""
+        """加载定时公告任务配置（持久化数据）"""
         if os.path.exists(SCHEDULED_CONFIG_PATH):
             try:
                 with open(SCHEDULED_CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -111,7 +110,7 @@ class AnnouncementPushPlugin(Star):
 
     # ------------------------------ 定时任务核心逻辑（文档异步规则） ------------------------------
     async def _scheduled_task_listener(self):
-        """监听定时公告任务，到点执行推送🔶1-736"""
+        """监听定时公告任务，到点执行推送"""
         while True:
             now = datetime.now()
             current_time = now.strftime("%H:%M")
@@ -134,7 +133,7 @@ class AnnouncementPushPlugin(Star):
             await asyncio.sleep(60)
 
     async def _send_announcement_to_groups(self, content: str) -> str:
-        """向所有已开启群推送公告（文档消息发送规则🔶1-250、🔶1-259）"""
+        """向所有已开启群推送公告"""
         if not self.group_config["enabled_groups"]:
             return "无已开启推送的群"
 
@@ -145,15 +144,15 @@ class AnnouncementPushPlugin(Star):
 
         for group in self.group_config["enabled_groups"]:
             try:
-                # 构建MessageChain（文档要求：主动消息必须用MessageChain，不可用列表🔶1-250）
+                # 构建MessageChain
                 message_chain = MessageChain()
                 if self.allow_at_all:
-                    message_chain.chain.append(Comp.At(qq="all"))  # @全体成员（仅AIOCQHTTP支持🔶1-98）
+                    message_chain.chain.append(Comp.At(qq="all"))  # @全体成员（仅AIOCQHTTP支持）
                 message_chain.chain.append(
                     Comp.Plain(f"\n【管理员公告】\n{content}\n推送时间：{push_time}")
                 )
 
-                # 发送主动消息（文档位置参数：umo → MessageChain🔶1-250）
+                # 发送主动消息
                 await self.context.send_message(
                     group["umo"],  # 会话唯一标识
                     message_chain  # 消息链实例
@@ -166,13 +165,13 @@ class AnnouncementPushPlugin(Star):
 
         return f"成功{success_cnt}个群，失败{fail_cnt}个群\n失败群ID：{','.join(fail_groups) if fail_groups else '无'}"
 
-    # ------------------------------ 中英文指令（基于文档alias功能） ------------------------------
+    # ------------------------------ 中英文指令 ------------------------------
     @filter.command(
         "pushhelp",
-        alias={"推送帮助"},  # 中文别名：符合文档v3.4.28+指令别名规则🔶1-171、🔶1-172
+        alias={"推送帮助"},
         priority=1
     )
-    @filter.permission_type(filter.PermissionType.ADMIN)  # 管理员权限🔶1-191、🔶1-192
+    @filter.permission_type(filter.PermissionType.ADMIN)
     async def cmd_push_help(self, event: AstrMessageEvent):
         """推送帮助：列出所有中英文指令（全场景可用）"""
         help_text = f"""
@@ -190,19 +189,19 @@ class AnnouncementPushPlugin(Star):
 • @全体成员：{"✅ 允许" if self.allow_at_all else "❌ 禁止"}
 • 默认定时时间：{self.default_scheduled_time}
         """.strip()
-        yield event.plain_result(help_text)  # 被动消息回复🔶1-246
+        yield event.plain_result(help_text)  # 被动消息回复
 
     @filter.command(
         "pushstart",
-        alias={"推送开启"},  # 中文别名：无空格，符合文档指令格式要求🔶1-133
+        alias={"推送开启"},  # 中文别名：无空格
         priority=0
     )
     @filter.permission_type(filter.PermissionType.ADMIN)
-    @filter.event_message_type(filter.EventMessageType.GROUP_MESSAGE)  # 仅群聊触发🔶1-178
+    @filter.event_message_type(filter.EventMessageType.GROUP_MESSAGE)  # 仅群聊触发
     async def cmd_push_start(self, event: AstrMessageEvent):
         """推送开启：添加当前群到推送列表（中英文指令通用）"""
-        group_id = event.get_group_id() or event.message_obj.group_id  # 获取群ID🔶1-69、🔶1-78
-        umo = event.unified_msg_origin  # 记录群会话标识🔶1-252
+        group_id = event.get_group_id() or event.message_obj.group_id  # 获取群ID
+        umo = event.unified_msg_origin  # 记录群会话标识
         if not group_id:
             yield event.plain_result("获取群ID失败，无法开启推送")
             return

@@ -4,7 +4,7 @@ description: AstrBot 管理员专属公告推送插件（支持中英文指令�
 version: 1.2.0
 repo_url: https://github.com/chenmuting/announcement_push
 tags: ["管理员工具", "公告推送", "定时任务", "WebUI配置", "中英文指令"]
-support_platforms: ["QQ个人号(aiocqhttp)"]  # 仅AIOCQHTTP支持@全体成员🔶1-98
+support_platforms: ["QQ个人号(aiocqhttp)"]  # 仅AIOCQHTTP支持@全体成员
 config_support: true
 config_hint: "插件目录下_conf_schema.json定义配置，可在WebUI「插件管理→配置」中修改；指令支持中英文（如/pushhelp = /推送帮助）"
 permission_hint: "所有指令仅Bot管理员可用，需在Bot后台配置管理员账号；支持中英文触发（如/推送公告 = /pushannounce）"
